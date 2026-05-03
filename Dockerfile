@@ -27,6 +27,7 @@ COPY --from=builder /app/server/prisma ./prisma
 COPY --from=builder /app/client/dist ../client/dist
 
 ENV NODE_ENV=production
+ENV PORT=8080
 EXPOSE 8080
 
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
