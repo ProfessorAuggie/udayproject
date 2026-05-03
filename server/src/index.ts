@@ -28,10 +28,20 @@ function resolveClientDist(): string {
 const app = express();
 const PORT = Number(process.env.PORT) || 4000;
 
+function corsOrigin(): boolean | string | string[] {
+  const raw = process.env.CLIENT_ORIGIN?.trim();
+  if (!raw) return true;
+  const list = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  if (list.length === 0) return true;
+  if (list.length === 1) return list[0];
+  return list;
+}
+
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN ?? true,
+    origin: corsOrigin(),
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 app.use(express.json({ limit: "1mb" }));

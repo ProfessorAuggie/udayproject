@@ -93,8 +93,8 @@ The server serves the SPA from `client/dist` when `index.html` is present.
 Keep the **API** on Railway (or any host that runs Node + PostgreSQL). Vercel hosts the **static Vite build** only.
 
 1. In Vercel, **Import** this repo. You can leave **Root Directory** at the repo root: root **`vercel.json`** installs and builds only `client/` and sets **Output Directory** to `client/dist` (so the default `public` folder is not used). Alternatively, set Root Directory to `client` and rely on `client/vercel.json` instead.
-2. Under **Environment Variables**, add **`VITE_API_BASE_URL`** with your public API origin (no path, no trailing slash), for example `https://your-service.up.railway.app`.
-3. On the **server**, set **`CLIENT_ORIGIN`** to your Vercel site URL (for example `https://your-app.vercel.app`) so CORS allows the browser. Redeploy the API after changing it.
+2. Under **Environment Variables**, add **`VITE_API_BASE_URL`** with your public **API** origin only (no `/api` path, no trailing slash), for example `https://your-service.up.railway.app`. **Required** for split hosting — without it, login calls `/api` on Vercel and will fail.
+3. On the **server**, set **`CLIENT_ORIGIN`** to your Vercel URL(s) so CORS allows the browser. Use a comma-separated list if you use preview deploys, e.g. `https://your-app.vercel.app,https://your-app-git-main-xxx.vercel.app`. Redeploy the API after changing it.
 4. Deploy the Vercel project. SPA rewrites are configured in `vercel.json` (root) or `client/vercel.json` (if the root directory is `client`).
 
 ## REST API (summary)

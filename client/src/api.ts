@@ -1,8 +1,15 @@
 const TOKEN_KEY = "ttm_token";
 
-/** Production: set `VITE_API_BASE_URL` to your API origin (e.g. Railway URL), no trailing slash. */
+function normalizeApiBase(raw: string | undefined): string {
+  if (!raw?.trim()) return "";
+  let b = raw.trim().replace(/\/$/, "");
+  if (b.endsWith("/api")) b = b.replace(/\/api$/, "");
+  return b;
+}
+
+/** Production (split deploy): set `VITE_API_BASE_URL` to your API origin only, e.g. https://xxx.up.railway.app — no `/api` suffix. */
 const API_PREFIX = (() => {
-  const base = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+  const base = normalizeApiBase(import.meta.env.VITE_API_BASE_URL as string | undefined);
   return base ? `${base}/api` : "/api";
 })();
 
@@ -16,6 +23,22 @@ export function setToken(token: string | null) {
 }
 
 export type ApiError = { error: string; details?: unknown };
+
+function parseJsonBody(text: string, res: Response): unknown {
+  const t = text.trim();
+  if (!t) return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    const hint =
+      t.startsWith("<!") || t.startsWith("<html")
+        ? " The response was HTML, not JSON — usual causes: frontend still pointing at this host for /api (set VITE_API_BASE_URL to your API and redeploy), or the API URL is wrong."
+        : "";
+    throw new Error(
+      `Could not read server response (${res.status}).${hint}`.trim(),
+    );
+  }
+}
 
 export async function api<T>(
   path: string,
@@ -32,13 +55,26 @@ export async function api<T>(
     headers["Content-Type"] = "application/json";
     body = JSON.stringify(init.json);
   }
-  const res = await fetch(`${API_PREFIX}${path}`, { ...init, headers, body });
-  if (res.status === 204) return undefined as T;
+
+  const url = `${API_PREFIX}${path}`;
+  let res: Response;
+  try {
+    res = await fetch(url, { ...init, headers, body });
+  } catch (e) {
+    const msg =
+      e instanceof TypeError
+        ? "Cannot reach the API. Is the server running? If this site is on Vercel, set environment variable VITE_API_BASE_URL to your backend URL (e.g. Railway) and redeploy."
+        : "Network request failed.";
+    throw new Error(msg);
+  }
+
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  const data = parseJsonBody(text, res) as ApiError | null;
+
+  if (res.status === 204) return undefined as T;
   if (!res.ok) {
-    const err = data as ApiError;
-    throw new Error(err?.error ?? res.statusText);
+    const err = data as ApiError | null;
+    throw new Error(err?.error ?? res.statusText ?? `Request failed (${res.status})`);
   }
   return data as T;
 }
