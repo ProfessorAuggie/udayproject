@@ -18,7 +18,7 @@ Full-stack web app for **projects**, **team membership**, and **tasks** with **A
 | API      | Node.js 22, Express 5, TypeScript   |
 | ORM / DB | Prisma 6, PostgreSQL                |
 | Client   | React 19, Vite 6, React Router 7    |
-| Deploy   | Docker (see `Dockerfile`), Railway, Vercel (SPA) |
+| Deploy   | Docker, Railway, **Vercel** (static UI + serverless API; see below) |
 
 ## Local development
 
@@ -88,14 +88,35 @@ The server serves the SPA from `client/dist` when `index.html` is present.
 
 6. Smoke-test: `GET /api/health` should return `{"ok":true}`; open the app URL in a browser.
 
-## Deploy on Vercel (frontend)
+## Deploy on Vercel (full stack on Vercel)
 
-Keep the **API** on Railway (or any host that runs Node + PostgreSQL). Vercel hosts the **static Vite build** only.
+Vercel runs the **Express API** from the root **`index.ts`** (default export) and serves the UI from **`public/`**. The build copies `client/dist` → `public` (see `vercel.json`); routes stay under **`/api/...`**. You still need **hosted PostgreSQL** (e.g. [Neon](https://neon.tech), Supabase, or Vercel Postgres)—Vercel does not replace the database.
 
-1. In Vercel, **Import** this repo. You can leave **Root Directory** at the repo root: root **`vercel.json`** installs and builds only `client/` and sets **Output Directory** to `client/dist` (so the default `public` folder is not used). Alternatively, set Root Directory to `client` and rely on `client/vercel.json` instead.
-2. Under **Environment Variables**, add **`VITE_API_BASE_URL`** with your public **API** origin only (no `/api` path, no trailing slash), for example `https://your-service.up.railway.app`. **Required** for split hosting — without it, login calls `/api` on Vercel and will fail.
-3. On the **server**, set **`CLIENT_ORIGIN`** to your Vercel URL(s) so CORS allows the browser. Use a comma-separated list if you use preview deploys, e.g. `https://your-app.vercel.app,https://your-app-git-main-xxx.vercel.app`. Redeploy the API after changing it.
-4. Deploy the Vercel project. SPA rewrites are configured in `vercel.json` (root) or `client/vercel.json` (if the root directory is `client`).
+1. Create a Postgres database and copy its connection string (`DATABASE_URL`). Use a URL that allows SSL (often `?sslmode=require`).
+
+2. In Vercel → your project → **Settings → Environment Variables** (Production + Preview as needed):
+
+   - **`DATABASE_URL`** — required for build (`prisma migrate deploy`) and runtime.
+   - **`JWT_SECRET`** — long random string (required in production).
+   - **`CLIENT_ORIGIN`** — optional; leave unset to allow any browser origin, or set your site URL(s), comma-separated for previews.
+
+   Do **not** set **`VITE_API_BASE_URL`** for this setup—the browser should call **`/api`** on the same Vercel hostname.
+
+3. **Import** the GitHub repo with **Root Directory** = repository root (so `vercel.json`, `api/`, `server/`, and `client/` are all used).
+
+4. Deploy. The build runs `prisma generate`, `prisma migrate deploy`, compiles the server, and builds the client.
+
+5. **Demo data** (optional): from your machine, with production `DATABASE_URL`:
+
+   ```bash
+   cd server && npm ci && npm run db:seed
+   ```
+
+6. Check **`GET https://your-project.vercel.app/api/health`** → `{"ok":true}`. Sign in at your site URL.
+
+### Split hosting (API on Railway, UI on Vercel)
+
+If the API stays on another host, build only the client on Vercel and set **`VITE_API_BASE_URL`** to that API origin (no `/api` suffix). Configure **`CLIENT_ORIGIN`** on the API for your Vercel URL(s). Root **`vercel.json`** in this repo targets **full stack on Vercel**; for client-only root directory you can use **`client/`** and `client/vercel.json` instead.
 
 ## REST API (summary)
 

@@ -2,6 +2,7 @@
   "name": "team-task-manager",
   "private": true,
   "version": "1.0.0",
+  "type": "module",
   "description": "Full-stack team task manager with RBAC",
   "scripts": {
     "build": "npm run build:client && npm run build:server",
