@@ -5,9 +5,9 @@
   "type": "module",
   "description": "Full-stack team task manager with RBAC",
   "scripts": {
-    "build": "npm run build:client && npm run build:server",
-    "build:client": "cd client && npm ci && npm run build",
-    "build:server": "cd server && npm ci && npx prisma generate && npm run build",
+    "build": "npm run build:server && npm run build:client",
+    "build:client": "cd client && npm ci --legacy-peer-deps && npm run build",
+    "build:server": "cd server && npm ci --legacy-peer-deps && npx prisma generate && npm run build",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
@@ -15,6 +15,7 @@
     "db:seed": "cd server && npm run db:seed"
   },
   "devDependencies": {
+    "@vercel/node": "^3.2.6",
     "concurrently": "^9.1.2"
   },
   "dependencies": {
