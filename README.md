@@ -1,4 +1,4 @@
-# Team Task Manager
+# TaskFlow (Team Task Manager)
 
 Full-stack web app for **projects**, **team membership**, and **tasks** with **Admin / Member** roles, JWT authentication, and a **PostgreSQL** database (via Prisma).
 
@@ -48,6 +48,14 @@ Full-stack web app for **projects**, **team membership**, and **tasks** with **A
    ```bash
    cd client && npm install && npm run dev
    ```
+
+5. Optional — **demo accounts** (admin + three members, sample project **TaskFlow HQ** and tasks):
+
+   ```bash
+   cd server && npm run db:seed
+   ```
+
+   Sign in with e.g. `admin@taskflow.com` / `admin@123` (see login page for the full list).
 
 Open `http://localhost:5173`.
 

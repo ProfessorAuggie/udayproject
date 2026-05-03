@@ -10,7 +10,14 @@ import { RegisterPage } from "./pages/RegisterPage";
 
 function Protected({ children }: { children: ReactNode }) {
   const { user, ready } = useAuth();
-  if (!ready) return <div className="page-muted">Loading…</div>;
+  if (!ready) {
+    return (
+      <div className="app-loading">
+        <span className="brand-mark lg pulse" aria-hidden />
+        <p>Loading TaskFlow…</p>
+      </div>
+    );
+  }
   if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }

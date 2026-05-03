@@ -53,7 +53,7 @@ export function ProjectsPage() {
       <header className="page-header row">
         <div>
           <h1>Projects</h1>
-          <p className="muted">Spaces for your team and tasks.</p>
+          <p className="muted">Your TaskFlow workspaces — open one to manage team and tasks.</p>
         </div>
         <button type="button" className="btn primary" onClick={() => setCreating((c) => !c)}>
           {creating ? "Cancel" : "New project"}

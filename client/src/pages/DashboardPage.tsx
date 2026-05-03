@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import { useAuth } from "../auth/AuthContext";
 
 type Summary = {
   totalTasks: number;
@@ -19,9 +20,19 @@ type RecentTask = {
   assignee: { id: string; name: string } | null;
 };
 
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export function DashboardPage() {
+  const { user } = useAuth();
   const [data, setData] = useState<{ summary: Summary; recentTasks: RecentTask[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const lead = useMemo(() => `${greeting()}, ${user?.name?.split(" ")[0] ?? "there"}.`, [user?.name]);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,16 +50,38 @@ export function DashboardPage() {
   }, []);
 
   if (error) return <div className="alert error">{error}</div>;
-  if (!data) return <div className="page-muted">Loading dashboard…</div>;
+  if (!data) {
+    return (
+      <div className="page">
+        <div className="loading-hero">
+          <div className="skeleton skeleton-line lg" />
+          <div className="skeleton skeleton-line md" />
+          <div className="skeleton stat-skel-grid">
+            <div className="skeleton skeleton-card" />
+            <div className="skeleton skeleton-card" />
+            <div className="skeleton skeleton-card" />
+            <div className="skeleton skeleton-card" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const { summary, recentTasks } = data;
 
   return (
     <div className="page">
-      <header className="page-header">
-        <h1>Dashboard</h1>
-        <p className="muted">Overview of tasks across your projects.</p>
-      </header>
+      <section className="dashboard-hero">
+        <div>
+          <h1 className="dashboard-greet">{lead}</h1>
+          <p className="muted lead dashboard-lead">
+            Here’s what’s happening across your projects — open work, deadlines, and tasks assigned to you.
+          </p>
+        </div>
+        <Link to="/projects" className="btn primary dashboard-cta">
+          Open projects
+        </Link>
+      </section>
 
       <section className="stat-grid">
         <div className="stat-card">
