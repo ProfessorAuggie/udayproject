@@ -40,6 +40,22 @@ function messageFromApiPayload(data: unknown, res: Response): string {
   return fallback;
 }
 
+/** True when requests use a path on the current site (e.g. /api) instead of a full API origin. */
+function isRelativeApiOrigin(): boolean {
+  return !/^https?:\/\//i.test(API_PREFIX);
+}
+
+function explainApiNotOnThisHost(res: Response, baseMessage: string): string {
+  if (res.status !== 404 || !isRelativeApiOrigin()) return baseMessage;
+  return `${baseMessage}
+
+The TaskFlow API is not on this address. Your app is probably on Vercel while the API runs elsewhere (e.g. Railway).
+
+Fix: Vercel → your project → Settings → Environment Variables → add VITE_API_BASE_URL = your API origin only (example: https://something.up.railway.app — no /api at the end). Save, then redeploy the frontend so it rebuilds.
+
+On Railway: ensure the API service is running and CORS CLIENT_ORIGIN includes your Vercel URL.`;
+}
+
 function parseJsonBody(text: string, res: Response): unknown {
   const t = text.trim();
   if (!t) return null;
@@ -89,7 +105,8 @@ export async function api<T>(
 
   if (res.status === 204) return undefined as T;
   if (!res.ok) {
-    throw new Error(messageFromApiPayload(data, res));
+    const raw = messageFromApiPayload(data, res);
+    throw new Error(explainApiNotOnThisHost(res, raw));
   }
   return data as T;
 }

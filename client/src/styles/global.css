@@ -293,6 +293,7 @@ input.sm {
   background: rgba(248, 113, 113, 0.12);
   border: 1px solid rgba(248, 113, 113, 0.35);
   color: #fecaca;
+  white-space: pre-line;
 }
 
 .auth-page {
