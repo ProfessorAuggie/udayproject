@@ -44,7 +44,9 @@ export function ProjectPage() {
   const [inviteRole, setInviteRole] = useState<"ADMIN" | "MEMBER">("MEMBER");
 
   const [taskTitle, setTaskTitle] = useState("");
+  const [taskDescription, setTaskDescription] = useState("");
   const [taskDue, setTaskDue] = useState("");
+  const [taskExpanded, setTaskExpanded] = useState(false);
 
   const isAdmin = project?.yourRole === "ADMIN";
 
@@ -124,11 +126,14 @@ export function ProjectPage() {
         method: "POST",
         json: {
           title: taskTitle,
+          description: taskDescription || null,
           dueDate: taskDue ? new Date(taskDue).toISOString() : null,
         },
       });
       setTaskTitle("");
+      setTaskDescription("");
       setTaskDue("");
+      setTaskExpanded(false);
       await loadAll();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Task create failed");
@@ -228,51 +233,80 @@ export function ProjectPage() {
               </button>
             </form>
           ) : null}
-          <ul className="member-list">
-            {members.map((m) => (
-              <li key={m.userId}>
-                <div>
-                  <strong>{m.user.name}</strong>
-                  <span className="muted small">{m.user.email}</span>
-                </div>
-                <div className="member-actions">
-                  <span className={`pill ${m.role === "ADMIN" || m.isOwner ? "admin" : ""}`}>
-                    {m.isOwner ? "Owner" : m.role}
-                  </span>
-                  {isAdmin && !m.isOwner && m.userId !== user?.id ? (
-                    <>
-                      <select
-                        className="sm"
-                        value={m.role}
-                        onChange={(e) => void changeMemberRole(m.userId, e.target.value as "ADMIN" | "MEMBER")}
-                      >
-                        <option value="MEMBER">Member</option>
-                        <option value="ADMIN">Admin</option>
-                      </select>
-                      <button type="button" className="btn ghost sm" onClick={() => void removeMember(m.userId)}>
-                        Remove
-                      </button>
-                    </>
-                  ) : null}
-                </div>
-              </li>
-            ))}
-          </ul>
+          {members.length === 0 ? (
+            <p className="muted small">No team members yet. Add some above.</p>
+          ) : (
+            <ul className="member-list">
+              {members.map((m) => (
+                <li key={m.userId}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <strong>{m.user.name}</strong>
+                    <div className="muted small">{m.user.email}</div>
+                  </div>
+                  <div className="member-actions">
+                    <span className={`pill ${m.role === "ADMIN" || m.isOwner ? "admin" : ""}`}>
+                      {m.isOwner ? "Owner" : m.role}
+                    </span>
+                    {isAdmin && !m.isOwner && m.userId !== user?.id ? (
+                      <>
+                        <select
+                          className="sm"
+                          value={m.role}
+                          onChange={(e) => void changeMemberRole(m.userId, e.target.value as "ADMIN" | "MEMBER")}
+                        >
+                          <option value="MEMBER">Member</option>
+                          <option value="ADMIN">Admin</option>
+                        </select>
+                        <button type="button" className="btn ghost sm" onClick={() => void removeMember(m.userId)}>
+                          Remove
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <section className="panel">
           <h2>Add task</h2>
-          <form className="form row-form" onSubmit={createTask}>
+          <form className="form" onSubmit={createTask}>
             <input
               placeholder="Task title"
               value={taskTitle}
               onChange={(e) => setTaskTitle(e.target.value)}
               required
             />
-            <input type="date" value={taskDue} onChange={(e) => setTaskDue(e.target.value)} />
-            <button type="submit" className="btn primary sm">
-              Add
-            </button>
+            {taskExpanded && (
+              <>
+                <textarea
+                  placeholder="Add task description (optional)"
+                  value={taskDescription}
+                  onChange={(e) => setTaskDescription(e.target.value)}
+                  rows={3}
+                />
+                <input type="date" value={taskDue} onChange={(e) => setTaskDue(e.target.value)} />
+              </>
+            )}
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button type="submit" className="btn primary sm" style={{ flex: 1 }}>
+                {taskExpanded ? "Create task" : "Quick add"}
+              </button>
+              <button
+                type="button"
+                className="btn secondary sm"
+                onClick={() => {
+                  setTaskExpanded(!taskExpanded);
+                  if (taskExpanded) {
+                    setTaskDescription("");
+                    setTaskDue("");
+                  }
+                }}
+              >
+                {taskExpanded ? "Collapse" : "Details"}
+              </button>
+            </div>
           </form>
         </section>
       </div>

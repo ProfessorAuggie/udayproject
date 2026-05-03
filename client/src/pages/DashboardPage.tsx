@@ -137,20 +137,25 @@ export function DashboardPage() {
           </Link>
         </div>
         {recentTasks.length === 0 ? (
-          <p className="muted">No tasks yet. Create a project and add tasks.</p>
+          <p className="muted">No tasks yet. Create a project and add tasks to get started.</p>
         ) : (
           <ul className="task-list compact">
-            {recentTasks.map((t) => (
+            {recentTasks.slice(0, 8).map((t) => (
               <li key={t.id}>
-                <Link to={`/projects/${t.project.id}`} className="task-link">
+                <Link to={`/projects/${t.project.id}`} className="task-link" title={t.title}>
                   <span className={`pill status-${t.status}`}>{formatStatus(t.status)}</span>
-                  <span className="task-title">{t.title}</span>
-                  <span className="muted small">{t.project.name}</span>
-                  {t.dueDate ? (
-                    <span className={`small ${isOverdue(t.dueDate, t.status) ? "text-warn" : ""}`}>
-                      Due {formatDate(t.dueDate)}
-                    </span>
-                  ) : null}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="task-title">{t.title}</div>
+                    <div className="muted small">{t.project.name}</div>
+                  </div>
+                  <div className="task-meta">
+                    {t.assignee && <span className="small muted">@{t.assignee.name.split(" ")[0]}</span>}
+                    {t.dueDate && (
+                      <span className={`small ${isOverdue(t.dueDate, t.status) ? "text-warn" : ""}`}>
+                        {formatDate(t.dueDate)}
+                      </span>
+                    )}
+                  </div>
                 </Link>
               </li>
             ))}
