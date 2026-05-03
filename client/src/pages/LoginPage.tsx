@@ -81,7 +81,12 @@ export function LoginPage() {
                   required
                 />
               </label>
-              <button type="submit" className="btn primary" disabled={loading}>
+              <button 
+                type="submit" 
+                className="btn primary" 
+                disabled={loading || !email || !password}
+                style={{ opacity: loading || !email || !password ? 0.6 : 1 }}
+              >
                 {loading ? "Signing in…" : "Sign in"}
               </button>
             </form>

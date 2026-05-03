@@ -74,8 +74,13 @@ export function RegisterPage() {
                   minLength={8}
                 />
               </label>
-              <button type="submit" className="btn primary" disabled={loading}>
-                {loading ? "Creating…" : "Sign up"}
+              <button 
+                type="submit" 
+                className="btn primary" 
+                disabled={loading || !email || !password || !name}
+                style={{ opacity: loading || !email || !password || !name ? 0.6 : 1 }}
+              >
+                {loading ? "Creating account…" : "Sign up"}
               </button>
             </form>
 
