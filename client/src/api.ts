@@ -1,5 +1,11 @@
 const TOKEN_KEY = "ttm_token";
 
+/** Production: set `VITE_API_BASE_URL` to your API origin (e.g. Railway URL), no trailing slash. */
+const API_PREFIX = (() => {
+  const base = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+  return base ? `${base}/api` : "/api";
+})();
+
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
@@ -26,7 +32,7 @@ export async function api<T>(
     headers["Content-Type"] = "application/json";
     body = JSON.stringify(init.json);
   }
-  const res = await fetch(`/api${path}`, { ...init, headers, body });
+  const res = await fetch(`${API_PREFIX}${path}`, { ...init, headers, body });
   if (res.status === 204) return undefined as T;
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
