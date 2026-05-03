@@ -61,7 +61,7 @@ export function createServerApp(includeStatic: boolean): express.Application {
   if (includeStatic) {
     const clientDist = resolveClientDist();
     app.use(express.static(clientDist));
-    app.get("*", (req, res, next) => {
+    app.get("*splat", (req, res, next) => {
       if (req.path.startsWith("/api")) {
         next();
         return;
