@@ -22,7 +22,23 @@ export function setToken(token: string | null) {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
-export type ApiError = { error: string; details?: unknown };
+export type ApiError = { error?: unknown; message?: unknown; details?: unknown };
+
+function messageFromApiPayload(data: unknown, res: Response): string {
+  const fallback = res.statusText || `Request failed (${res.status})`;
+  if (!data || typeof data !== "object") return fallback;
+  const o = data as Record<string, unknown>;
+  const err = o.error;
+  if (typeof err === "string" && err.trim()) return err;
+  if (err && typeof err === "object") {
+    const m = (err as Record<string, unknown>).message;
+    if (typeof m === "string" && m.trim()) return m;
+  }
+  const top = o.message;
+  if (typeof top === "string" && top.trim()) return top;
+  if (typeof err === "number") return String(err);
+  return fallback;
+}
 
 function parseJsonBody(text: string, res: Response): unknown {
   const t = text.trim();
@@ -69,12 +85,11 @@ export async function api<T>(
   }
 
   const text = await res.text();
-  const data = parseJsonBody(text, res) as ApiError | null;
+  const data = parseJsonBody(text, res);
 
   if (res.status === 204) return undefined as T;
   if (!res.ok) {
-    const err = data as ApiError | null;
-    throw new Error(err?.error ?? res.statusText ?? `Request failed (${res.status})`);
+    throw new Error(messageFromApiPayload(data, res));
   }
   return data as T;
 }
